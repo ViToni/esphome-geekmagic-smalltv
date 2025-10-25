@@ -58,9 +58,9 @@ time:
      - 2.pool.ntp.org
 
 font:
-  - id: roboto
+  - id: roboto_16
     file: "gfonts://Roboto"
-    size: 20
+    size: 16
   - id: spleen64
     file:
       type: web
@@ -131,8 +131,8 @@ display:
 
           auto now = id(sntp_time).now();
           if (now.is_valid()) {
-            it.printf( +12, 12, id(spleen64), id(color_ironman_red),    TextAlign::TOP_LEFT,     "%02d", now.hour);
-            it.printf(W-12, 12, id(spleen64), id(color_ironman_yellow), TextAlign::TOP_RIGHT,    "%02d", now.minute);
+            it.printf( +11,  12, id(spleen64),  id(color_ironman_red),    TextAlign::TOP_LEFT,     "%02d", now.hour);
+            it.printf(W-11,  12, id(spleen64),  id(color_ironman_yellow), TextAlign::TOP_RIGHT,    "%02d", now.minute);
 
-            it.printf( W/2,  H, id(roboto),   id(color_ironman_yellow), TextAlign::BOTTOM_CENTER, "%02d-%02d", now.day_of_month, now.month,);
+            it.printf( W/2, H-4, id(roboto_16), id(color_ironman_yellow), TextAlign::BOTTOM_CENTER, "%02d-%02d", now.day_of_month, now.month);
           }
