@@ -61,8 +61,6 @@ font:
   - id: roboto
     file: "gfonts://Roboto"
     size: 20
-  - id: terminus12n
-    file: fonts/terminus-font-4.49.1/ter-u12n.bdf
   - id: spleen64
     file:
       type: web
@@ -130,10 +128,6 @@ display:
 
           // Background image (also replaces autoclear)
           it.image(0, 0, id(bg_image), ImageAlign::TOP_LEFT);
-
-          // This is a bad-example, to demonstrate side-effect multiplication.
-          static int framecounter = 0;
-          it.printf(W, H, id(terminus12n), id(color_ironman_yellow), TextAlign::BOTTOM_RIGHT, "%d", framecounter++);
 
           auto now = id(sntp_time).now();
           if (now.is_valid()) {
