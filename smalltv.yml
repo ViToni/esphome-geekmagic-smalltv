@@ -122,7 +122,7 @@ display:
     pages:
       - id: page_clock
         lambda: |-
-          // Calculate the center positions
+          // Store screen dimensions
           int W = it.get_width();
           int H = it.get_height();
 
