@@ -1,0 +1,103 @@
+= ESPHome customization to support the GeekMagic SmallTV
+:toc:
+
+This is a small customization to ESPHome to support the Weather Clock SmallTV by https://geekmagic.aliexpress.com[GeekMagic], a tiny TV screen based on an ESP with a 240x240 display.
+There are actually at least 3 models fo the SmallTV:
+
+- https://github.com/GeekMagicClock/smalltv[SmallTV] (https://de.aliexpress.com/item/1005004679769445.html[AliExpress]) - ESP-12F, NO touch sensor
+- https://github.com/GeekMagicClock/smalltv-ultra[SmallTV Ultra] (https://de.aliexpress.com/item/1005006727771881.html[AliExpress]) - ESP8266, ST7789V display / 240x240px , NO touch sensor
+- https://github.com/GeekMagicClock/smalltv-pro[SmallTV Pro] (https://de.aliexpress.com/item/1005005132140010.html[AliExpress]) - ESP32-WROOM-32 and touch sensor on the top side.
++
+image::https://github.com/GeekMagicClock/smalltv-pro/blob/main/images/img-smalltv-pro.jpg?raw=true[SmallTV Pro,150,150]
+
+As the firmware provided by GeekMagic is only available as binary, it can only customized within constrains and it requires an app to configure it and relies on unknown remote servers.
+
+The search for an alternative firmware led to ESPHome, which is a great open source project to create custom firmwares for ESP based devices with a lot of built-in functionality and easy configuration. +
+This https://community.home-assistant.io/t/installing-esphome-on-geekmagic-smart-weather-clock-smalltv-pro/618029/13[thread] in the ESPHome describes how people started to get ESPHome running on the SmallTV and their finding along the way
+
+This repository contains the necessary files to build a custom ESPHome firmware specifically for the SmallTV Pro, including the display configuration and a minimal custom watch layout.
+
+Most of the work is based on the excellent work of https://github.com/lhartmann/[Lucas Hartmann] and his https://github.com/lhartmann/esphome-st7789v-fractional-framebuffer[configuration].
+
+
+== Install ESPHome
+
+Follow the instructions on the https://esphome.io/guides/installing_esphome.html[ESPHome installation guide] to install ESPHome on your system.
+The standalone version https://esphome.io/guides/installing_esphome/#pip[using pip] was used to install ESPHome on locally.
+
+[source,shell]
+----
+$ python3 -m venv venv      # The last argument is the folder in which to install the virtual environment
+$ source venv/bin/activate  # For bash or compatible shells. If using a different shell, use activate.csh or activate.fish
+(venv) $ pip install esphome       # Installs ESPHome in the virtual environment
+(venv) $ esphome version
+----
+
+== Compiling the ESPHome firmware
+
+The provided `smalltv.yml` file contains the ESPHome configuration for the SmallTV Pro.
+It includes the necessary display configuration and a watch layout.
+The configuration omits secrets like WiFi credentials or OTA update passwords, which need to be added before compiling the firmware.
+The secrets can be added directly in the `smalltv.yml` file or in a separate `secrets.yaml` file as described in the https://esphome.io/guides/configuration-types.html#secrets[ESPHome documentation].
+The latter has the benefit that the `smalltv.yml` file can be shared without exposing sensitive data.
+
+The `secrets.yaml` file should contain an entry for every key (`!secret <key>`) from the `smalltv.yml` and look like this:
+
+[source,yaml]
+----
+api_key: "12341234123412341234123412341234"
+ota_password: "safe_ota_password"
+wifi_ssid: "SSID_for_IoT_network"
+wifi_password: "safe_wifi_password"
+
+... add other secrets as needed
+----
+
+As the configuration file references a custom font file, make sure to download the https://sourceforge.net/projects/terminus-font/files/terminus-font-4.49/terminus-font-4.49.1.tar.gz/download[Terminus font v4.49.1] and extract it into the same folder as the `smalltv.yml` file.
+
+Now the firmware can be compiled with the following command:
+[source,shell]
+----
+(venv) $ esphome compile smalltv.yml
+----
+
+== Flashing ESPHome
+There are two ways to flash the ESPHome firmware to the SmallTV Pro:
+
+. Using a USB to Serial adapter connected to the UART pins on the PCB
+. Using OTA (Over The Air) updates after an initial flashing with an `firmware.ota.bin` file.
+
+== Prepare the SmallTV Pro for ESPHome
+The SmallTV Pro needs to be prepared to accept custom ESPHome firmware.
+At the bottom there are two screws. When removed it allows to remove the the inner "tray" which holds the PCB.
+There are 6 pads on the PCB for UART connection. The following connections are needed:
+
+----
+⬜️ 1 GND
+⚪ 2 TXD0 # needs to be connected to the RX pin of the USB to Serial adapter
+⚪ 3 RXD0 # needs to be connected to the TX pin of the USB to Serial adapter
+⚪ 4 3V3
+⚪ 5 GPIO0
+⚪ 6 RST
+----
+
+The SmallTV Pro needs to be powered with `3.3V` on the 4th pad.
+The `GPIO0` pad needs to be connected to `GND` while powering the device to enter the flashing mode.
+
+Now the device can be flashed with the ESPHome firmware using a USB to Serial adapter.
+
+[source,shell]
+----
+(venv) $ esphome run smalltv.yml
+----
+
+This command will scan all serial ports to find the connected SmallTV Pro device and try to flash the firmware.
+Instead of `run` the command `upload` can be used to only upload the firmware without starting the logs.
+
+After the initial flashing the device can be powered normally and connected to WiFi.
+
+== Using the web UI to flash the OTA firmware
+
+The stock firmware provides a web UI to update the firmware.
+This future can be used to upload the `firmware.ota.bin` file generated by ESPHome.
+Once on ESPHome future firmware updates can be done over the air (OTA).
