@@ -49,9 +49,13 @@ wifi:
 captive_portal:
 
 time:
-  - id: ha_time
-    platform: homeassistant
-    timezone: America/Recife
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers:
+     - 0.pool.ntp.org
+     - 1.pool.ntp.org
+     - 2.pool.ntp.org
 
 font:
   - id: roboto
@@ -132,7 +136,7 @@ display:
           static int framecounter = 0;
           it.printf(W, H, id(terminus12n), id(color_ironman_yellow), TextAlign::BOTTOM_RIGHT, "%d", framecounter++);
 
-          auto now = id(ha_time).now();
+          auto now = id(sntp_time).now();
           if (now.is_valid()) {
             it.printf( +12, 12, id(spleen64), id(color_ironman_red),    TextAlign::TOP_LEFT,  "%02d", now.hour);
             it.printf(W-12, 12, id(spleen64), id(color_ironman_yellow), TextAlign::TOP_RIGHT, "%02d", now.minute);
