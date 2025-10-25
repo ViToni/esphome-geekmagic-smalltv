@@ -102,7 +102,6 @@ color:
 interval:
   - interval: 5s
     then:
-      - display.page.show_next: my_display
       - component.update: my_display
 
 display:
@@ -143,8 +142,3 @@ display:
 
             it.printf(W/2, H, id(roboto), id(color_ironman_yellow), TextAlign::BOTTOM_CENTER, "%02d/%02d/%04d", now.day_of_month, now.month, now.year);
           }
-
-      - id: page_blankish
-        lambda: |-
-          // This is a bad-example, will not be a solid color, but stripes.
-          it.fill(Color(rand()));
