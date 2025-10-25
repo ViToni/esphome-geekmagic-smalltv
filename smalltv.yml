@@ -55,6 +55,8 @@ font:
   - id: roboto
     file: "gfonts://Roboto"
     size: 20
+  - id: terminus12n
+    file: fonts/terminus-font-4.49.1/ter-u12n.bdf
   - id: spleen64
     file:
       type: web
