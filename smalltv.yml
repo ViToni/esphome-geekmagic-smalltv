@@ -26,10 +26,12 @@ external_components:
 # Enable logging
 logger:
 
-# Enable Home Assistant API
+# Home Assistant API
 api:
-  encryption:
-    key: !secret api_key
+  # prevent reboots in case the connection to HA is lost or the device is used standalone
+  reboot_timeout: 0s
+#  encryption:
+#    key: !secret api_key
 
 ota:
   - platform: esphome
