@@ -67,6 +67,8 @@ font:
   - id: roboto_16
     file: "gfonts://Roboto"
     size: 16
+  - id: terminus14n
+    file: fonts/terminus-font-4.49.1/ter-u14n.bdf
   - id: spleen64
     file:
       type: web
@@ -120,6 +122,11 @@ sensor:
         }
 
 text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      id: wifi_ip_address
+      entity_category: diagnostic
   - platform: template
     id: wifi_signal_icon
     name: "WiFi Signal Strength Icon"
@@ -210,3 +217,6 @@ display:
           }
 
           it.printf(W-3, H-7, id(icon_font_20), wifi_status_color, TextAlign::BOTTOM_RIGHT, wifi_status_icon);
+          if (id(default_wifi).is_connected()) {
+            it.printf(3, H-7, id(terminus14n), id(color_ironman_red), TextAlign::BOTTOM_LEFT, id(wifi_ip_address).state.c_str());
+          }
