@@ -89,6 +89,9 @@ font:
       - "\U000F16BD" # mdi-wifi-check
 
 sensor:
+  - platform: uptime
+    name: Uptime
+    entity_category: diagnostic
   - platform: wifi_signal
     name: WiFi Signal
     id: wifi_signal_db
