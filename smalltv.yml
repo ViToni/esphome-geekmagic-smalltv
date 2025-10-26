@@ -38,15 +38,21 @@ ota:
     password: !secret ota_password
 
 wifi:
+  id: default_wifi
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  on_connect:
+    then:
+      # workaround as there is no initial value for the icon sensor
+      - lambda: id(wifi_signal_icon).publish_state("\U000F16BD"); // wifi check
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
-  # ap:
-  #   ssid: "Geekmagic-Smalltv-01"
-  #   password: !secret fallback_password
+  ap:
+    ssid: !secret ap_ssid
+    password: !secret ap_password
 
 captive_portal:
+  id: my_portal
 
 time:
   - platform: sntp
@@ -66,6 +72,54 @@ font:
       type: web
       url: https://raw.githubusercontent.com/fcambus/spleen/refs/heads/master/spleen-32x64.bdf
     glyphs: "0123456789:"
+  - id: icon_font_20
+    file:
+      type: web
+      url: https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf
+    size: 20
+    glyphs:
+      - "\U000F0003" # mdi-access-point
+      - "\U000F05A9" # mdi-wifi
+      - "\U000F091F" # mdi-wifi-strength-1
+      - "\U000F0922" # mdi-wifi-strength-2
+      # - "\U000F0925" # mdi-wifi-strength-3 -- skipping to have a bigger step between 2 and full
+      # - "\U000F0928" # mdi-wifi-strength-4 -- skipping as we use the wifi icon itself
+      - "\U000F092B" # mdi-wifi-strength-alert-outline
+      - "\U000F092E" # mdi-wifi-strength-off-outline
+      - "\U000F16BD" # mdi-wifi-check
+
+sensor:
+  - platform: wifi_signal
+    name: WiFi Signal
+    id: wifi_signal_db
+    on_value:
+      # ---- Text sensor to expose the current WiFi status icon ----
+      lambda: |-
+        // computed current wifi status icon
+        auto computed_icon = "";
+
+        int8_t rssi = id(wifi_signal_db).state;
+
+        // based on the logic in https://github.com/esphome/esphome/blob/7394cbf77329f3b5a035e5ce334c9ac0ae19818c/esphome/components/wifi/wifi_component.cpp#L417
+        if (rssi >= -50) {
+          computed_icon = "\U000F05A9"; // wifi icon (full)
+        } else if (rssi >= -65) {
+          computed_icon = "\U000F0922"; // 2 bars
+        } else  if (rssi >= -85) {
+          computed_icon = "\U000F091F"; // 1 bar
+        } else {
+          computed_icon = "\U000F092B"; // 0 bars with alert
+        }
+
+        // publish only on change
+        if (id(wifi_signal_icon).state != computed_icon) {
+          id(wifi_signal_icon).publish_state(computed_icon);
+        }
+
+text_sensor:
+  - platform: template
+    id: wifi_signal_icon
+    name: "WiFi Signal Strength Icon"
 
 image:
   - id: bg_image
@@ -136,3 +190,20 @@ display:
 
             it.printf( W/2, H-4, id(roboto_16), id(color_ironman_yellow), TextAlign::BOTTOM_CENTER, "%02d-%02d", now.day_of_month, now.month);
           }
+
+          // ---- WiFi status icon ----
+          // compute wifi status icon based on connection state and signal strength
+          auto wifi_status_color = id(color_ironman_yellow);
+          auto wifi_status_icon = "";
+          if (id(my_portal).is_active()) {
+            wifi_status_icon = "\U000F0003"; // access point icon
+          } else if (id(default_wifi).is_connected()) {
+            // connected: use the current signal strength icon
+            wifi_status_icon = id(wifi_signal_icon).state.c_str();
+          } else {
+              // not connected: show wifi off icon
+              wifi_status_icon = "\U000F092E"; // wifi off icon
+              wifi_status_color = id(color_ironman_red);
+          }
+
+          it.printf(W-3, H-7, id(icon_font_20), wifi_status_color, TextAlign::BOTTOM_RIGHT, wifi_status_icon);
