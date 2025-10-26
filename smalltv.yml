@@ -131,6 +131,13 @@ text_sensor:
     id: wifi_signal_icon
     name: "WiFi Signal Strength Icon"
 
+# ---- Globals to hold the tick ----
+globals:
+  - id: current_brightness
+    type: float
+    restore_value: no
+    initial_value: '0.5'
+
 image:
   - id: bg_image
     file: https://lcsvh.com/ironman.png
@@ -162,6 +169,37 @@ color:
     hex: fcb712
 
 interval:
+  - interval: 60s
+    then:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          if (now.is_valid()) {
+            float brightness = 0.50; // default brightness
+            if (now.hour < 1) {
+              // it's past midnight, dim the backlight even more
+              brightness = 0.10;
+            } else if (now.hour < 3) {
+              // it's in the middle of the night, dim the backlight even more
+              brightness = 0.05;
+            } else if (now.hour < 8) {
+              // it's early, dim the backlight
+              brightness = 0.10;
+            } else if (now.hour < 10) {
+              // it's not that early anymore, dim the backlight
+              brightness = 0.20;
+            } else if (now.hour > 22) {
+              // it's late, dim the backlight
+              brightness = 0.20;
+            }
+
+            float current = id(current_brightness);
+            if (brightness != current) {
+              // only update if changed
+              id(pwm_output).set_level(brightness);
+              id(current_brightness) = brightness;
+              ESP_LOGD("display", "Adjusted backlight brightness from %.2f to %.2f", current, brightness);
+            }
+          }
   - interval: 5s
     then:
       - component.update: my_display
